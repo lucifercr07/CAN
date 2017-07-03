@@ -32,45 +32,43 @@
 
 import logging
 import os
-import ssl
 import sys
 import time
 import can
 
 log = logging.getLogger(__name__)
 
-class Can():
+class Can:
     '''
         CAN implementation for LIOTA. It uses python-can internally.
     '''
-    def __init__(self, channel=None, can_filters=None, bus, listeners, timeout=None, enable_authentication=False, timestamp=0.0, is_remote_frame=False, extended_id=True,
-                is_error_frame=False, arbitration_id=0,dlc=None, data=None):
+    def __init__(self, channel=None, can_filters=None, bustype, listeners, timeout=None, enable_authentication=False, data=None):
         
         self.channel =  channel
-        self.bus = bus
+        self.bustype = bustype
         self.can_filters = can_filters
         self.listeners = listeners
         self.timeout = timeout
-        self.timestamp = timestamp
-        self.id_type = extended_id
-        self.is_error_frame = is_error_frame
-        self.is_remote_frame = is_remote_frame
-        self.arbitration_id = arbitration_id
+        self.enable_authentication = enable_authentication
+        self.data = data
+
 
     def connect(self):
-        bus = can.interface.Bus(self.channel) #args inside Bus()?? what abt cls,other,*args??
+        bus = can.interface.Bus(bustype=self.bustype, channel=self.channel) 
+        log.info("Connected to Can Bus")
 
-    def send(self):
-        message = can.Message(self.arbitration_id, self.data, self.extended_id=True)
+    def send(self, arbitration_id, data, extended_id):
+        message = can.Message(arbitration_id=arbitration_id, data=data, extended_id=extended_id)  #Should I change the names?
         try:
             self.bus.send(message)
             print("Message sent on {}".format(bus.channel_info))
         except can.CanError:
             print("Message not sent")
+            log.error("Message not sent over channel")
 
         
-    def recv(self):
-        self.bus.recv(self.timeout)
+    def recv(self, timeout):
+        return self.bus.recv(self.timeout)
     
     def set_filters(self):
         self.bus.set_filters(self.can_filters)
@@ -82,9 +80,41 @@ class Can():
         self.bus.shutdown()
     
     def stop(self):
+        #To-Do: Add using Notifier
+
+class CanMessagingAttributes:
+
+    def __init__(self, edge_system_name=None, timestamp=0.0, is_remote_frame=False, extended_id=True,
+                is_error_frame=False, arbitration_id=0,dlc=None, timeout=None):
+
+        if edge_system_name:
+            
+            self.arbitration_id = #how to generate arbitartion_id
+            self.extended_id = True
+        else:
+            #  When edge_system_name is None, arbitration_id and extended_id must be provided
+            self.arbitration_id = arbitration_id
+            self.extended_id = extended_id
+
+        self.timestamp = timestamp
+        self.id_type = extended_id
+        self.is_error_frame = is_error_frame
+        self.is_remote_frame = is_remote_frame
+        self.arbitration_id = arbitration_id
+
+        if dlc is None:
+            self.dlc = len(self.data)
+        else:
+            self.dlc = dlc
+
+        assert self.dlc <= 8, "data link count was {} but it must be less than or equal to 8".format(self.dlc)
+        self.timeout = timeout
+
+    def __len__(self):
+        return len(self.data)
 
 
-    
+  
     
     
 

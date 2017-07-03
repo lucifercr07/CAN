@@ -33,7 +33,7 @@
 import logging
 
 from liota.device_comms.device_comms import DeviceComms
-from liota.lib.transports.can import Can
+from liota.lib.transports.can import Can, CanMessagingAttributes 
 
 log = logging.getLogger(__name__)
 
@@ -43,9 +43,9 @@ class CanDeviceComms(DeviceComms):
     DeviceComms for Can bus protocol
     """
 
-    def __init__(self, channel=None, can_filters=None, bus, listeners, timeout=None, enable_authentication=False, timestamp=0.0, is_remote_frame=False, extended_id=True,
-                is_error_frame=False, arbitration_id=0,dlc=None, data=None):
+    def __init__(self, edge_system_name, channel=None, can_filters=None, bustype, listeners,timeout=None,enable_authentication=False, data=None, can_msg_attr=None):
         """
+        :param edge_system_name: For auto generation of the arbitration_id and keep extended_id true
         :param channel: The can interface identifier. Expected type is backend dependent.
         :param can_filters:A list of dictionaries each containing a "can_id" and a "can_mask".
             >>> [{"can_id": 0x11, "can_mask": 0x21}]
@@ -53,41 +53,55 @@ class CanDeviceComms(DeviceComms):
         ::param bus: The ref:`bus` to listen too.
         :param listeners: An iterable of class:`can.Listeners`
         :param timeout: An optional maximum number of seconds to wait for any message.
+        :param userdata: userdata is used to store messages coming from the receive channel.
          Messages can use extended identifiers, be remote or error frames, and contain data.
         """
+
         self.channel = channel  
         self.bus = bus
         self.can_filters=can_filters
         self.listeners = listeners
         self.timeout = timeout
         self.enable_authentication=enable_authentication
-        self.timestamp = timestamp
-        self.is_remote_frame = is_remote_frame
-        self.extended_id = extended_id
-        self.is_error_frame = is_error_frame
-        self.arbitration_id = arbitration_id
-        self.dlc = dlc
+        self.userdata = Queue.Queue()
         self.data = data
-        
+        if can_msg_attr is None:
+            log.info("arbitration_id will be auto-generated and extended_id will be true by default")
+            self.msg_attr = CanMessagingAttributes(edge_system_name)
+        elif isinstance(can_msg_attr, CanMessagingAttributes):
+            log.info("User configured arbitration_id and extended_id")
+            self.msg_attr = can_msg_attr
+        else:
+            log.error("can_mess_attr should either be None or of type CanMessagingAttributes")
+            raise TypeError("can_mess_attr should either be None or of type CanMessagingAttributes")
+        self._connect()
 
     def _connect(self):
         
-        self.client = Can(self.channel, self.can_filters=can_filters, self.bus=bus, self.listeners=listeners,self.timeout = timeout,
-                        self.timestamp = timestamp, self.id_type = extended_id,self.is_error_frame = is_error_frame,self.is_remote_frame = is_remote_frame,
-                        self.arbitration_id = arbitration_id)
+        self.client = Can(self.channel, self.can_filters, self.bustype, self.listeners, self.timeout,
+                            self.enable_authentication, self.data=None)
 
 
     def _disconnect(self):
         #how to stop (can.Notifier has stop method)
 
-    def send(self):
-        self.client.send()
+    def send(self, msg_attr=None):
+        if msg_attr:
+            self.client.send(msg_attr.arbitration_id, self.data, msg_attr.extended_id)
+        else
+            self.client.send(self.msg_attr.arbitration_id, self.data, self.msg_attr.extended_id)
 
-    def receive(self):
-        self.client.recv()
+    def receive(self, msg_attr=None):
+        '''
+        :param msg_attr: CanMessagingAttributes Object
+        '''
+        if msg_attr:
+            userdata.put(self.client.recv(msg_attr.timeout))   #Is it right way to add data which is received 
+        else
+            userdata.put(self.client.recv(self.msg_attr.timeout))
 
     def set_filters(self):
-        self.client.set_filters()
+        self.client.set_filters(self.can_filters)
 
     def flush_tx_buffer(self):
         self.client.flush_tx_buffer()
