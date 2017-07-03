@@ -42,13 +42,12 @@ class Can:
     '''
         CAN implementation for LIOTA. It uses python-can internally.
     '''
-    def __init__(self, channel=None, can_filters=None, bustype, listeners, timeout=None, enable_authentication=False, data=None):
+    def __init__(self, channel=None, can_filters=None, bustype, listeners, enable_authentication=False, data=None):
         
         self.channel =  channel
         self.bustype = bustype
         self.can_filters = can_filters
         self.listeners = listeners
-        self.timeout = timeout
         self.enable_authentication = enable_authentication
         self.data = data
 

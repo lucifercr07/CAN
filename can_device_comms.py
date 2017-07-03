@@ -43,7 +43,7 @@ class CanDeviceComms(DeviceComms):
     DeviceComms for Can bus protocol
     """
 
-    def __init__(self, edge_system_name, channel=None, can_filters=None, bustype, listeners,timeout=None,enable_authentication=False, data=None, can_msg_attr=None):
+    def __init__(self, edge_system_name, channel=None, can_filters=None, bustype, listeners,enable_authentication=False, data=None, can_msg_attr=None):
         """
         :param edge_system_name: For auto generation of the arbitration_id and keep extended_id true
         :param channel: The can interface identifier. Expected type is backend dependent.
@@ -61,7 +61,6 @@ class CanDeviceComms(DeviceComms):
         self.bus = bus
         self.can_filters=can_filters
         self.listeners = listeners
-        self.timeout = timeout
         self.enable_authentication=enable_authentication
         self.userdata = Queue.Queue()
         self.data = data
