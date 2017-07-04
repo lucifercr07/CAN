@@ -43,7 +43,8 @@ class CanDeviceComms(DeviceComms):
     DeviceComms for Can bus protocol
     """
 
-    def __init__(self, edge_system_name, channel=None, can_filters=None, bustype, listeners,enable_authentication=False, data=None, can_msg_attr=None):
+    def __init__(self, edge_system_name, channel=None, can_filters=None, bustype, listeners,enable_authentication=True, 
+                    timeout=None, can_msg_attr=None):
         """
         :param edge_system_name: For auto generation of the arbitration_id and keep extended_id true
         :param channel: The can interface identifier. Expected type is backend dependent.
@@ -63,7 +64,7 @@ class CanDeviceComms(DeviceComms):
         self.listeners = listeners
         self.enable_authentication=enable_authentication
         self.userdata = Queue.Queue()
-        self.data = data
+        self.timeout = timeout
         if can_msg_attr is None:
             log.info("arbitration_id will be auto-generated and extended_id will be true by default")
             self.msg_attr = CanMessagingAttributes(edge_system_name)
@@ -71,8 +72,8 @@ class CanDeviceComms(DeviceComms):
             log.info("User configured arbitration_id and extended_id")
             self.msg_attr = can_msg_attr
         else:
-            log.error("can_mess_attr should either be None or of type CanMessagingAttributes")
-            raise TypeError("can_mess_attr should either be None or of type CanMessagingAttributes")
+            log.error("can_msg_attr should either be None or of type CanMessagingAttributes")
+            raise TypeError("can_msg_attr should either be None or of type CanMessagingAttributes")
         self._connect()
 
     def _connect(self):
@@ -84,11 +85,11 @@ class CanDeviceComms(DeviceComms):
     def _disconnect(self):
         #how to stop (can.Notifier has stop method)
 
-    def send(self, msg_attr=None):
+    def send(self, data, msg_attr=None):
         if msg_attr:
-            self.client.send(msg_attr.arbitration_id, self.data, msg_attr.extended_id)
+            self.client.send(msg_attr.arbitration_id, data, msg_attr.extended_id)
         else
-            self.client.send(self.msg_attr.arbitration_id, self.data, self.msg_attr.extended_id)
+            self.client.send(self.msg_attr.arbitration_id, data, self.msg_attr.extended_id)
 
     def receive(self, msg_attr=None):
         '''
@@ -104,6 +105,10 @@ class CanDeviceComms(DeviceComms):
 
     def flush_tx_buffer(self):
         self.client.flush_tx_buffer()
+
+    def send_periodic(self, data, msg_attr=None, period, duration=None):
+        task = self.client.send_periodic(data, msg_attr.arbitration_id, msg_attr.extended_id, period, duration)
+        #To-Do how the task will be used
 
     def shutdown():
         self.client.shutdown()
