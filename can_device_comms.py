@@ -96,9 +96,11 @@ class CanDeviceComms(DeviceComms):
         :param msg_attr: CanMessagingAttributes Object
         '''
         if msg_attr:
-            userdata.put(self.client.recv(msg_attr.timeout))   #Is it right way to add data which is received 
-        else
-            userdata.put(self.client.recv(self.msg_attr.timeout))
+            msg = self.client.recv(msg_attr.timeout)   #Is it right way to add data which is received 
+        else:
+            msg = self.client.recv(self.msg_attr.timeout)
+        if msg is not None:
+                print(msg)
 
     def set_filters(self):
         self.client.set_filters(self.can_filters)
