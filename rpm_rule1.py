@@ -1,5 +1,5 @@
-#lambda expression use for checking if rpm metric exceeds a specified limit more than five times
-#values which are being exceeded are not saved in this case
+#lambda expression use for checking if rpm metric exceeds a specified limit more than five times consecutively
+#values which exceeds a certain limit are not saved in this case
 
 rpm = [45,20,30,50,52,35,55,65,70,75,85]
 rpm_limit=45
