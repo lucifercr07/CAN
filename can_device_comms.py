@@ -44,7 +44,7 @@ class CanDeviceComms(DeviceComms):
 	DeviceComms for Can bus protocol
 	"""
 
-	def __init__(self, channel=None, can_filters=None, bustype=None, listeners=None, can_msg_attr=None):
+	def __init__(self, can_msg_attr, channel=None, can_filters=None, bustype=None, listeners=None):
 		"""
 		:param channel: The can interface identifier. Expected type is backend dependent.
 		:param can_filters:A list of dictionaries each containing a "can_id" and a "can_mask".
@@ -88,6 +88,9 @@ class CanDeviceComms(DeviceComms):
 		:param msg_attr : CanMessaging attribute instance
 		 Messages can use extended identifiers, be remote or error frames, and contain data.
 		'''
+		if data is None:
+			raise TypeError("Data can't be none")
+
 		if msg_attr:
 			self.client.send(msg_attr.arbitration_id, data, msg_attr.extended_id)
 		else:
@@ -99,7 +102,7 @@ class CanDeviceComms(DeviceComms):
 		'''
 		msg = self.client.recv(timeout)  
 		if msg is not None:
-			print(msg)
+			return msg
 		else:
 			print("No message received")
 			log.error("No message received")
