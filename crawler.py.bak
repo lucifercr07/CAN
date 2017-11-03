@@ -68,7 +68,7 @@ def get_url():
 	else:
 		url+=y
 	return url	
-
+	
 show = ""
 show_name = raw_input("Enter the show name: ")
 show_name = string.capwords(show_name)
@@ -134,7 +134,7 @@ for episodes in all_episodes_link:
 	
 	for div in soup.find_all("div", class_="data"):
 		a = div.find_all('a')
-		if "HD" in a[0].string:
+		if a[0].string[len(a[0].string)-1]=='4' :
 			episode_link =  a[0]['href']
 			download_episode(episode_link,episode_no)
 			episode_no+=1
