@@ -6,6 +6,7 @@ rpm_limit=45
 
 f = lambda x : 1 if x>=rpm_limit else 0
 
+print f.__name__
 
 def check():
 	print("Args: ",f.__code__.co_argcount)
